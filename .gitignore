@@ -1,0 +1,5 @@
+Gemfile.lock
+.*.swp
+vendor
+.bundle
+config.yaml
