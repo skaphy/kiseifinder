@@ -103,8 +103,19 @@ class KiseiFinder
 				end
 				if found
 					# 見つけたので現在のセクションの開始時刻とpost数を取得
+
+					# SECTION_TIMEずつ時間をずらしていき、現在時刻を超える直前の時間がセクション開始時間
+					now = Time.now
 					@section_start = posts[found-1].created_at
-					@post_count = found
+					@section_start = @section_start+SECTION_TIME while @section_start+SECTION_TIME < now
+
+					# セクションあたりのpost数を取得
+					@post_count = 0
+					posts[0..found-1].each do |post|
+						break if post.created_at < @section_start
+						@post_count += 1
+					end
+
 					@logger.info("#{@screen_name}: Reset section #{@post_count} #{@section_start} to #{section_end}")
 				else
 					# 無いようであれば現在規制中と仮定し、SECTION_MAXpost前のpostを前回のセクション開始とする
