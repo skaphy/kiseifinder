@@ -151,7 +151,7 @@ end
 
 if $0 == __FILE__
 	config = YAML.load(File.read("config.yaml"))
-	KiseiSearch.start(
+	KiseiFinder.start(
 		:consumer_key => config["twitter"]["consumer_key"],
 		:consumer_secret => config["twitter"]["consumer_secret"],
 		:access_token => config["twitter"]["access_token"],
