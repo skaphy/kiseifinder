@@ -1,0 +1,6 @@
+まず、config.yaml.exampleをconfig.yamlとしてコピーして、自分のconsumer_keyとかをそこに書いて、usersに監視したいユーザを書いておきます。
+$ bundle install --path=vendor/bundler
+して
+$ ruby kiseifinder.rb
+でとりあえずサンプルが動きます。
+
