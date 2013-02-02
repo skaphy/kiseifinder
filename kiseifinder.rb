@@ -12,6 +12,12 @@ require 'tweetstream'
 
 class KiseiFinder
 
+	# 1セクションあたりの時間
+	SECTION_TIME = 60*60*3
+
+	# セクションあたりの最大投稿数
+	SECTION_MAX = 127
+
 	class Account
 
 		attr_reader :screen_name
@@ -64,7 +70,7 @@ class KiseiFinder
 		# セクション終了時間
 		def section_end
 			# セクション開始時間の3時間後
-			@section_start+(60*60*3)
+			@section_start+SECTION_TIME
 		end
 
 		# セクションの残り時間
@@ -79,7 +85,7 @@ class KiseiFinder
 
 		def reset
 			posts = @twitter.user_timeline(@screen_name, :count => 3200)
-			if posts[0].created_at < Time.now-(60*60*3)
+			if posts[0].created_at < Time.now-SECTION_TIME
 				# 最新のpostが3時間より前の場合次がセクション開始になる
 				@newsection = true
 			else
@@ -89,7 +95,7 @@ class KiseiFinder
 				puts previous_created_at
 				(1..posts.length-1).each do |i|
 					post = posts[i]
-					if (previous_created_at-post.created_at).to_i > (60*60*3)
+					if (previous_created_at-post.created_at).to_i > SECTION_TIME
 						found = i
 						break
 					end
@@ -97,17 +103,14 @@ class KiseiFinder
 				end
 				if found
 					# 見つけたので現在のセクションの開始時刻とpost数を取得
-					section_posts = posts[0..(found%127)]
-					#@section_start = section_posts.first.created_at
-					#@post_count = section_posts.length
 					@section_start = posts[found-1].created_at
 					@post_count = found
 					@logger.info("#{@screen_name}: Reset section #{@post_count} #{@section_start} to #{section_end}")
 				else
-					# 無いようであれば現在規制中と仮定し、127post前のpostを前回のセクション開始とする
+					# 無いようであれば現在規制中と仮定し、SECTION_MAXpost前のpostを前回のセクション開始とする
 					section_post = posts[126]
 					@section_start = section_post.created_at
-					@post_count = 127
+					@post_count = SECTION_MAX
 				end
 			end
 		end
