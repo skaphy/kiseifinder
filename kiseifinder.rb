@@ -78,11 +78,6 @@ class KiseiFinder
 			section_end-Time.now
 		end
 
-		# セクションあたりの投速
-		def post_speed
-			post_count/(section_end-@section_start)
-		end
-
 		def reset
 			posts = @twitter.user_timeline(@screen_name, :count => 3200)
 			if posts[0].created_at < Time.now-SECTION_TIME
@@ -174,7 +169,7 @@ if $0 == __FILE__
 		:access_secret => config["twitter"]["access_secret"],
 		:users => config["users"],
 		:after_postadded => Proc.new do |twitter, tweet, account|
-			puts "@#{account.screen_name} #{account.post_count}(#{account.post_speed.round}) #{account.section_end}"
+			puts "@#{account.screen_name} #{account.post_count} #{account.section_end}"
 		end
 	)
 end
