@@ -34,13 +34,17 @@ class KiseiFinder
 			@section_start = value
 		end
 
+		def start_new_section(time)
+			@section_start = time
+			@post_count = 1
+		end
+
 		def newpost(time)
 			if @newsection
 				# 新セクションの開始
 				# ただしUserStreamはたまに変な値を送ってくるため注意
 				# (本当は現在時刻から1分以内にされたもののみ許可とかにしたほうがいいと思う)
-				@section_start = time
-				@post_count = 1
+				start_new_section(time)
 				@logger.info("#{@screen_name}: Start new section #{@section_start} to #{section_end}")
 			elsif @section_start == nil or @post_count == nil
 				# セクションの開始時刻がわからないか、投稿数がわからない
@@ -52,9 +56,7 @@ class KiseiFinder
 				@logger.info("#{@screen_name}: Post #{section_end}")
 			elsif time > section_end
 				# section_endより後のpost
-				# 新規セクションを開始する
-				@section_start = time
-				@post_count = 1
+				start_new_section(time)
 				@logger.info("#{@screen_name}: Start new section (over section_end) #{@section_start} to #{section_end}")
 			end
 		end
