@@ -75,7 +75,7 @@ class KiseiFinder
 
 		# セクションの残り時間
 		def remain_section
-			Time.now-section_end
+			section_end-Time.now
 		end
 
 		# セクションあたりの投速
