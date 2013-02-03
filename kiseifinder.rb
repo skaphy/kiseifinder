@@ -87,7 +87,6 @@ class KiseiFinder
 				# 3時間以上時間を置いてされたpostを探す
 				previous_created_at = posts[0].created_at
 				found = nil
-				puts previous_created_at
 				(1..posts.length-1).each do |i|
 					post = posts[i]
 					if (previous_created_at-post.created_at).to_i > SECTION_TIME
