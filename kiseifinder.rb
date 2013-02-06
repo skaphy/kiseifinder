@@ -131,17 +131,17 @@ class KiseiFinder
 			# XXX: あとで説明書きなおす
 			# 過去3200post以内に3時間以上postされなかった時を探す
 			allposts = find_posts
-			if allposts
+			if allposts && allposts.length == 1
+				# 最新のpostが3時間より前
+				# 次のpostの投稿時刻がセクション開始時刻になる
+				@newsection = true
+			elsif allposts.length > 1
 				# 見つかった
 				# 現在のセクションの開始時刻とpost数を取得
 				secposts = get_latest_section_posts(allposts)
 				@section_start = secposts.last.created_at
 				@post_count = secposts.length
 				@logger.info("#{@screen_name}: Reset section #{@post_count} #{@section_start} to #{section_end}")
-			elsif allposts.length == 1
-				# 最新のpostが3時間より前
-				# 次のpostの投稿時刻がセクション開始時刻になる
-				@newsection = true
 			else
 				# 過去3200postに3時間以上の空きを見つけられなかった
 				# 現在規制中と仮定し、SECTION_MAXpost前のpostを前回のセクション開始とする
