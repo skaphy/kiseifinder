@@ -83,7 +83,6 @@ class KiseiFinder
 		# * 見つかった場合: 3時間以上空く直前のpostを返す
 		# (12:30,15:00,15:10みたいになっていたら12:30からのpostを返す)
 		# * 見つけられなかった場合: nil
-		# XXX: 2番目の処理ちゃんと実装してない
 		def find_posts
 			allposts = @twitter.user_timeline(@screen_name, :count => 200)
 			return [allposts.first] if allposts.first.created_at < Time.now-SECTION_TIME
@@ -108,7 +107,8 @@ class KiseiFinder
 					allposts.concat(posts)
 				end
 			end
-			allposts
+			return nil unless found
+			allposts[0, found+2]
 		end
 		private :find_posts
 
