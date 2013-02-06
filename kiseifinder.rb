@@ -135,7 +135,7 @@ class KiseiFinder
 				# 最新のpostが3時間より前
 				# 次のpostの投稿時刻がセクション開始時刻になる
 				@newsection = true
-			elsif allposts.length > 1
+			elsif allposts && allposts.length > 1
 				# 見つかった
 				# 現在のセクションの開始時刻とpost数を取得
 				secposts = get_latest_section_posts(allposts)
