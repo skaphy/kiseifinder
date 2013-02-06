@@ -78,64 +78,76 @@ class KiseiFinder
 			section_end-Time.now
 		end
 
+		# SECTION_TIME以上時間の空いたpostを探す
+		# * 最新のpostが現在時刻より3時間より前: 最新のpost一件を配列にして返す
+		# * 見つかった場合: 3時間以上空く直前のpostを返す
+		# (12:30,15:00,15:10みたいになっていたら12:30からのpostを返す)
+		# * 見つけられなかった場合: nil
+		# XXX: 2番目の処理ちゃんと実装してない
+		def find_posts
+			allposts = @twitter.user_timeline(@screen_name, :count => 200)
+			return [allposts.first] if allposts.first.created_at < Time.now-SECTION_TIME
+			# 3時間以上時間を置いてされたpostを探す
+			previous_created_at = allposts.first.created_at
+			posts = allposts[1..-1]
+			found = nil
+			16.times do |x|
+				posts.length.times do |i|
+					post = posts[i]
+					if (previous_created_at-post.created_at).to_i > SECTION_TIME
+						found = i+(x*200)
+						break
+					end
+					previous_created_at = post.created_at
+				end
+				# 3時間置いてからされたpostがあればループを抜ける
+				break if found
+				# そうでなければ15回目のループの時以外user_timelineを取得
+				if x < 15
+					posts = @twitter.user_timeline(@screen_name, :count => 200, :max_id => posts.last.id)
+					allposts.concat(posts)
+				end
+			end
+			allposts
+		end
+		private :find_posts
+
+		def get_latest_section_posts(allposts)
+			# secstartはセクション開始となるpostのallposts上の位置
+			# 3時間以上時間を空けてからされたpostから最新のpostに向けて
+			# セクション内にされた最後のpostの次のpostの位置をsecstartにいれる
+			# これで現在のセクションの開始時間がわかる
+			secstart = allposts.length-1
+			secstart.downto(0) do |i|
+				if allposts[i].created_at-allposts[secstart].created_at > SECTION_TIME
+					secstart = i
+				end
+			end
+			allposts[0, secstart]
+		end
+		private :get_latest_section_posts
+
 		def reset
-			allposts = []
-			posts = @twitter.user_timeline(@screen_name, :count => 200)
-			allposts.concat(posts)
-			if posts[0].created_at < Time.now-SECTION_TIME
-				# 最新のpostが3時間より前の場合次がセクション開始になる
+			# XXX: あとで説明書きなおす
+			# 過去3200post以内に3時間以上postされなかった時を探す
+			allposts = find_posts
+			if allposts
+				# 見つかった
+				# 現在のセクションの開始時刻とpost数を取得
+				secposts = get_latest_section_posts(allposts)
+				@section_start = secposts.last.created_at
+				@post_count = secposts.length
+				@logger.info("#{@screen_name}: Reset section #{@post_count} #{@section_start} to #{section_end}")
+			elsif allposts.length == 1
+				# 最新のpostが3時間より前
+				# 次のpostの投稿時刻がセクション開始時刻になる
 				@newsection = true
 			else
-				# 3時間以上時間を置いてされたpostを探す
-				previous_created_at = posts[0].created_at
-				posts.shift
-				found = nil
-				16.times do |x|
-					posts.length.times do |i|
-						post = posts[i]
-						if (previous_created_at-post.created_at).to_i > SECTION_TIME
-							found = i+(x*200)
-							break
-						end
-						previous_created_at = post.created_at
-					end
-					# 3時間置いてからされたpostがあればループを抜ける
-					break if found
-					# そうでなければ15回目のループの時以外user_timelineを取得
-					if x < 15
-						posts = @twitter.user_timeline(@screen_name, :count => 200, :max_id => posts.last.id)
-						allposts.concat(posts)
-					end
-				end
-				if found
-					# 見つけたので現在のセクションの開始時刻とpost数を取得
-
-					# secstarはセクション開始となるpostのallposts上の位置
-					# 3時間以上時間を空けてからされたpostから最新のpostに向けて
-					# セクション内にされた最後のpostの次のpostの位置をsecstartにいれる
-					# これで現在のセクションの開始時間がわかる
-					secstart = found-1
-					secstart.downto(0) do |i|
-						if allposts[i].created_at-allposts[secstart].created_at > SECTION_TIME
-							secstart = i
-						end
-					end
-					@section_start = allposts[secstart].created_at
-
-					# セクションあたりのpost数を取得
-					@post_count = 0
-					allposts.each do |post|
-						break if post.created_at < @section_start
-						@post_count += 1
-					end
-
-					@logger.info("#{@screen_name}: Reset section #{@post_count} #{@section_start} to #{section_end}")
-				else
-					# 無いようであれば現在規制中と仮定し、SECTION_MAXpost前のpostを前回のセクション開始とする
-					section_post = posts[126]
-					@section_start = section_post.created_at
-					@post_count = SECTION_MAX
-				end
+				# 過去3200postに3時間以上の空きを見つけられなかった
+				# 現在規制中と仮定し、SECTION_MAXpost前のpostを前回のセクション開始とする
+				section_post = posts[SECTION_MAX-1]
+				@section_start = section_post.created_at
+				@post_count = SECTION_MAX
 			end
 		end
 
