@@ -167,13 +167,19 @@ class KiseiFinder
 			:oauth_token_secret => options[:access_secret],
 			:auth_method => :oauth
 		)
+
 		# after_postaddedにProcを渡しその中で規制リプライしたり、コマンド処理したりする。
 		@after_postadded = options[:after_postadded]
-		@users = {}
-		options[:users].each do |screen_name|
-			@users[screen_name] = Account.new(screen_name, @client)
-			@users[screen_name].reset
+
+		@check_whether_target_post = options[:check_whether_target_post]
+		unless @check_whether_target_post
+			# check_whether_target_postが指定されていなければデフォルトでフォロー中のユーザのみ対象とする
+			@check_whether_target_post = Proc.new do |tweet|
+				true
+			end
 		end
+
+		@users={}
 	end
 
 	def self.start(options={})
@@ -181,8 +187,19 @@ class KiseiFinder
 	end
 	def start
 		@stream.userstream do |status|
-			if status.text and @users[status.user.screen_name]
-				@users[status.user.screen_name].newpost(status.created_at)
+			if status.text
+				screen_name = status.user.screen_name
+
+				# 対象postでなければ何もしない
+				next unless @check_whether_target_post.call(status)
+
+				# 起動してから初めての投稿であればAccountのオブジェクトを作る
+				@users[screen_name] = Account.new(screen_name, @client) unless @users[screen_name]
+
+				# section_startが確定していない場合リセット
+				@users[screen_name].reset unless @users[screen_name].section_start
+
+				@users[screen_name].newpost(status.created_at)
 				@after_postadded.call(@client, status, @users[status.user.screen_name]) if @after_postadded
 			end
 		end
@@ -197,7 +214,7 @@ if $0 == __FILE__
 		:consumer_secret => config["twitter"]["consumer_secret"],
 		:access_token => config["twitter"]["access_token"],
 		:access_secret => config["twitter"]["access_secret"],
-		:users => config["users"],
+		#:check_target_post => ,
 		:after_postadded => Proc.new do |twitter, tweet, account|
 			puts "@#{account.screen_name} #{account.post_count} #{account.section_end}"
 		end
