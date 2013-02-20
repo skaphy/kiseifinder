@@ -175,7 +175,7 @@ class KiseiFinder
 		unless @preprocess
 			# preprocessが指定されていなければデフォルトでフォロー中のユーザのみ対象とする
 			@preprocess = Proc.new do |tweet|
-				true
+				next true
 			end
 		end
 
