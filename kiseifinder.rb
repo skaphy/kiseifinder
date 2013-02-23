@@ -82,7 +82,7 @@ class KiseiFinder
 		# * 最新のpostが現在時刻より3時間より前: 最新のpost一件を配列にして返す
 		# * 見つかった場合: 3時間以上空く直前のpostを返す
 		# (12:30,15:00,15:10みたいになっていたら12:30からのpostを返す)
-		# * 見つけられなかった場合: nil
+		# * 見つけられなかった場合: 空の配列
 		def find_posts
 			allposts = @twitter.user_timeline(@screen_name, :count => 200)
 			return [allposts.first] if allposts.first.created_at < Time.now-SECTION_TIME
@@ -107,7 +107,7 @@ class KiseiFinder
 					allposts.concat(posts)
 				end
 			end
-			return nil unless found
+			return [] unless found
 			allposts[0, found+2]
 		end
 		private :find_posts
@@ -131,11 +131,11 @@ class KiseiFinder
 			# XXX: あとで説明書きなおす
 			# 過去3200post以内に3時間以上postされなかった時を探す
 			allposts = find_posts
-			if allposts && allposts.length == 1
+			if allposts.length == 1
 				# 最新のpostが3時間より前
 				# 次のpostの投稿時刻がセクション開始時刻になる
 				@newsection = true
-			elsif allposts && allposts.length > 1
+			elsif allposts.length > 1
 				# 見つかった
 				# 現在のセクションの開始時刻とpost数を取得
 				secposts = get_latest_section_posts(allposts)
