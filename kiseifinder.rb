@@ -117,13 +117,13 @@ class KiseiFinder
 			# 3時間以上時間を空けてからされたpostから最新のpostに向けて
 			# セクション内にされた最後のpostの次のpostの位置をsecstartにいれる
 			# これで現在のセクションの開始時間がわかる
-			secstart = allposts.length-1
+			secstart = allposts.length-2
 			secstart.downto(0) do |i|
 				if allposts[i].created_at-allposts[secstart].created_at > SECTION_TIME
 					secstart = i
 				end
 			end
-			allposts[0, secstart]
+			allposts[0, secstart+1]
 		end
 		private :get_latest_section_posts
 
