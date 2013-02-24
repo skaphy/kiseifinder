@@ -3,6 +3,7 @@
 
 # Based on http://ltzz.info/alpha/twitter_kisei.html
 
+require 'yaml'
 require 'pp'
 require 'logger'
 require 'rubygems'
