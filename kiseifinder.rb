@@ -29,6 +29,9 @@ class KiseiFinder
 		# セクション内での投稿数
 		attr_reader :post_count
 
+		# 新セクションかどうか
+		attr_reader :newsection
+
 		def initialize(screen_name, twitter)
 			@screen_name = screen_name
 			@twitter = twitter
