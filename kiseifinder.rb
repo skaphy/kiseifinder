@@ -201,7 +201,7 @@ class KiseiFinder
 				@users[screen_name].reset unless @users[screen_name].section_start
 
 				@users[screen_name].newpost(status.created_at)
-				@postprocess.call(@client, status, @users[status.user.screen_name]) if @postprocess
+				@postprocess.call(self, @client, status, @users[status.user.screen_name]) if @postprocess
 			end
 		end
 	end
