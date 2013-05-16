@@ -29,6 +29,9 @@ class KiseiFinder
 		# セクション内での投稿数
 		attr_reader :post_count
 
+		# 新セクションかどうか
+		attr_reader :newsection
+
 		def initialize(screen_name, twitter)
 			@screen_name = screen_name
 			@twitter = twitter
@@ -154,6 +157,11 @@ class KiseiFinder
 
 	end
 
+	def get_account(screen_name)
+		@users[screen_name] = Account.new(screen_name, @client) unless @users[screen_name]
+		@users[screen_name]
+	end
+
 	def initialize(options={})
 		@client = Twitter::Client.new(
 			:consumer_key => options[:consumer_key],
@@ -187,7 +195,7 @@ class KiseiFinder
 		self.new(options).start
 	end
 	def start
-		@stream.userstream do |status|
+		@stream.userstream(:replies => 'all') do |status|
 			if status.text
 				screen_name = status.user.screen_name
 
@@ -201,7 +209,7 @@ class KiseiFinder
 				@users[screen_name].reset unless @users[screen_name].section_start
 
 				@users[screen_name].newpost(status.created_at)
-				@postprocess.call(@client, status, @users[status.user.screen_name]) if @postprocess
+				@postprocess.call(self, @client, status, @users[status.user.screen_name]) if @postprocess
 			end
 		end
 	end
