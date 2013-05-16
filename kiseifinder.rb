@@ -192,7 +192,7 @@ class KiseiFinder
 		self.new(options).start
 	end
 	def start
-		@stream.userstream do |status|
+		@stream.userstream(:replies => 'all') do |status|
 			if status.text
 				screen_name = status.user.screen_name
 
