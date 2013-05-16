@@ -154,6 +154,11 @@ class KiseiFinder
 
 	end
 
+	def get_account(screen_name)
+		@users[screen_name] = Account.new(screen_name, @client) unless @users[screen_name]
+		@users[screen_name]
+	end
+
 	def initialize(options={})
 		@client = Twitter::Client.new(
 			:consumer_key => options[:consumer_key],
