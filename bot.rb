@@ -41,11 +41,6 @@ postprocess = Proc.new do |kf, twitter, tweet, account|
 		target_account.reset unless target_account.section_start
 		twitter.update("@#{account.screen_name} 現在#{target_account.post_count}tweets/sectionやで 解除時刻は#{target_account.section_end.strftime("%H:%M:%S")}(残り:#{pretty_time(target_account.remain_section)})やで", :in_reply_to_status_id => tweet.id)
 	end
-=begin
-	if tweet.text.index("@#{SCREEN_NAME} いつ") == 0
-		twitter.update("@#{account.screen_name} 現在#{account.post_count}tweets/sectionやで 解除時刻は#{account.section_end.strftime("%H:%M:%S")}(残り:#{pretty_time(account.remain_section)})やで")
-	end
-=end
 	if tweet.text =~ CMD_RESET
 		target_screen_name = tweet.text.match(CMD_RESET)[1]
 		target_screen_name = account.screen_name unless target_screen_name
@@ -66,12 +61,6 @@ postprocess = Proc.new do |kf, twitter, tweet, account|
 		end
 		twitter.update(text, :in_reply_to_status_id => tweet.id)
 	end
-=begin
-	if tweet.text.index("@#{SCREEN_NAME} リセット") == 0
-		account.reset
-		twitter.update("@#{account.screen_name} リセットしたで！現在#{account.post_count}tweets/section 解除時刻は#{account.section_end.strftime("%H:%M:%S")}(残り:#{pretty_time(account.remain_section)})やで")
-	end
-=end
 end
 
 preprocess = Proc.new do |tweet|
