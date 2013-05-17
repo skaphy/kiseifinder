@@ -34,14 +34,14 @@ postprocess = Proc.new do |kf, twitter, tweet, account|
 	if account.post_count == NOTIFY_THRESHOLD
 		twitter.update("@#{account.screen_name} 規制間近やで(現在#{account.post_count}tweets/section) 解除時刻:#{account.section_end.strftime("%H:%M:%S")}(残り:#{pretty_time(account.remain_section)})")
 	end
-	if tweet.text =~ CMD_ITSU
+	case tweet.text
+	when CMD_ITSU
 		target_screen_name = tweet.text.match(CMD_ITSU)[1]
 		target_screen_name = account.screen_name unless target_screen_name
 		target_account = kf.get_account(target_screen_name)
 		target_account.reset unless target_account.section_start
 		twitter.update("@#{account.screen_name} 現在#{target_account.post_count}tweets/sectionやで 解除時刻は#{target_account.section_end.strftime("%H:%M:%S")}(残り:#{pretty_time(target_account.remain_section)})やで", :in_reply_to_status_id => tweet.id)
-	end
-	if tweet.text =~ CMD_RESET
+	when CMD_RESET
 		target_screen_name = tweet.text.match(CMD_RESET)[1]
 		target_screen_name = account.screen_name unless target_screen_name
 		target_account = kf.get_account(target_screen_name)
