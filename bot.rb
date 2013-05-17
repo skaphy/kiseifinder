@@ -4,7 +4,6 @@
 $stdout.sync = true
 $stderr.sync = true
 
-require 'pp'
 require 'yaml'
 require './kiseifinder'
 
