@@ -64,7 +64,6 @@ postprocess = Proc.new do |kf, twitter, tweet, account|
 end
 
 preprocess = Proc.new do |tweet|
-	puts "#{tweet.user.screen_name} #{tweet.id}"
 	# 受信したpostのユーザのscreen_nameがbot自身のscreen_nameであれば処理しない
 	next false if tweet.user.screen_name == SCREEN_NAME
 	next true
