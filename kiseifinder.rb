@@ -196,21 +196,19 @@ class KiseiFinder
 	end
 	def start
 		@stream.userstream(:replies => 'all') do |status|
-			if status.text
-				screen_name = status.user.screen_name
+			screen_name = status.user.screen_name
 
-				# 対象postでなければ何もしない
-				next unless @preprocess.call(status)
+			# 対象postでなければ何もしない
+			next unless @preprocess.call(status)
 
-				# 起動してから初めての投稿であればAccountのオブジェクトを作る
-				@users[screen_name] = Account.new(screen_name, @client) unless @users[screen_name]
+			# 起動してから初めての投稿であればAccountのオブジェクトを作る
+			@users[screen_name] = Account.new(screen_name, @client) unless @users[screen_name]
 
-				# section_startが確定していない場合リセット
-				@users[screen_name].reset unless @users[screen_name].section_start
+			# section_startが確定していない場合リセット
+			@users[screen_name].reset unless @users[screen_name].section_start
 
-				@users[screen_name].newpost(status.created_at)
-				@postprocess.call(self, @client, status, @users[status.user.screen_name]) if @postprocess
-			end
+			@users[screen_name].newpost(status.created_at)
+			@postprocess.call(self, @client, status, @users[status.user.screen_name]) if @postprocess
 		end
 	end
 
