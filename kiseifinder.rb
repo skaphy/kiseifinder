@@ -9,7 +9,6 @@ require 'logger'
 require 'rubygems'
 require 'bundler/setup'
 require 'twitter'
-require 'tweetstream'
 
 class KiseiFinder
 
@@ -163,19 +162,18 @@ class KiseiFinder
 	end
 
 	def initialize(options={})
-		@client = Twitter::Client.new(
-			:consumer_key => options[:consumer_key],
-			:consumer_secret => options[:consumer_secret],
-			:oauth_token => options[:access_token],
-			:oauth_token_secret => options[:access_secret]
-		)
-		@stream = TweetStream::Client.new(
-			:consumer_key => options[:consumer_key],
-			:consumer_secret => options[:consumer_secret],
-			:oauth_token => options[:access_token],
-			:oauth_token_secret => options[:access_secret],
-			:auth_method => :oauth
-		)
+		@client = Twitter::REST::Client.new do |config|
+			config.consumer_key          = options[:consumer_key]
+			config.consumer_secret       = options[:consumer_secret]
+			config.access_token          = options[:access_token]
+			config.access_token_secret   = options[:access_secret]
+		end
+		@stream = Twitter::Streaming::Client.new do |config|
+			config.consumer_key          = options[:consumer_key]
+			config.consumer_secret       = options[:consumer_secret]
+			config.access_token          = options[:access_token]
+			config.access_token_secret   = options[:access_secret]
+		end
 
 		# postprocessにProcを渡しその中で規制リプライしたり、コマンド処理したりする。
 		@postprocess = options[:postprocess]
@@ -195,20 +193,24 @@ class KiseiFinder
 		self.new(options).start
 	end
 	def start
-		@stream.userstream(:replies => 'all') do |status|
-			screen_name = status.user.screen_name
+		@stream.user(:replies => 'all') do |obj|
+			case obj
+			when Twitter::Tweet
+				status = obj
+				screen_name = status.user.screen_name
 
-			# 対象postでなければ何もしない
-			next unless @preprocess.call(status)
+				# 対象postでなければ何もしない
+				next unless @preprocess.call(status)
 
-			# 起動してから初めての投稿であればAccountのオブジェクトを作る
-			@users[screen_name] = Account.new(screen_name, @client) unless @users[screen_name]
+				# 起動してから初めての投稿であればAccountのオブジェクトを作る
+				@users[screen_name] = Account.new(screen_name, @client) unless @users[screen_name]
 
-			# section_startが確定していない場合リセット
-			@users[screen_name].reset unless @users[screen_name].section_start
+				# section_startが確定していない場合リセット
+				@users[screen_name].reset unless @users[screen_name].section_start
 
-			@users[screen_name].newpost(status.created_at)
-			@postprocess.call(self, @client, status, @users[status.user.screen_name]) if @postprocess
+				@users[screen_name].newpost(status.created_at)
+				@postprocess.call(self, @client, status, @users[status.user.screen_name]) if @postprocess
+			end
 		end
 	end
 
@@ -222,7 +224,7 @@ if $0 == __FILE__
 		:access_token => config["twitter"]["access_token"],
 		:access_secret => config["twitter"]["access_secret"],
 		#:preprocess => ,
-		:postprocess => Proc.new do |twitter, tweet, account|
+		:postprocess => Proc.new do |kf, twitter, tweet, account|
 			puts "@#{account.screen_name} #{account.post_count} #{account.section_end}"
 		end
 	)
